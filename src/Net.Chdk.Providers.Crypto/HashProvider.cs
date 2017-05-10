@@ -8,20 +8,25 @@ namespace Net.Chdk.Providers.Crypto
     {
         public string GetHashString(string filePath, string hashName)
         {
-            var hash = ComputeHash(filePath, hashName);
+            using (var stream = File.OpenRead(filePath))
+            {
+                return GetHashString(stream, hashName);
+            }
+        }
+
+        public string GetHashString(Stream stream, string hashName)
+        {
+            var hash = ComputeHash(stream, hashName);
             var sb = new StringBuilder(hash.Length * 2);
             for (int i = 0; i < hash.Length; i++)
                 sb.Append(hash[i].ToString("x2"));
             return sb.ToString();
         }
 
-        private static byte[] ComputeHash(string filePath, string hashName)
+        private static byte[] ComputeHash(Stream stream, string hashName)
         {
-            var hashAlgorithm = HashAlgorithm.Create(hashName);
-            using (var stream = File.OpenRead(filePath))
-            {
-                return hashAlgorithm.ComputeHash(stream);
-            }
+            return HashAlgorithm.Create(hashName)
+                .ComputeHash(stream);
         }
     }
 }
